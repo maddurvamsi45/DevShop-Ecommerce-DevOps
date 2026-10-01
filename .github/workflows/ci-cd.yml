@@ -2,18 +2,26 @@ name: DevShop CI/CD
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
+
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/devshop-ecommerce
 
 jobs:
+
   test:
+    name: Test Application
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -22,27 +30,45 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Test
+      - name: Run tests
         run: npm test
 
+
   docker:
+    name: Build and Push Docker Image
     needs: test
+
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout
+
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Docker Login
+      - name: Verify Docker Hub username
+        run: |
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "ERROR: DOCKERHUB_USERNAME secret is missing"
+            exit 1
+          fi
+
+          echo "Docker Hub username configured: ${{ secrets.DOCKERHUB_USERNAME }}"
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -52,4 +78,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deployment Notice
-        run: echo "Image pushed successfully. Connect this stage to EKS for deployment."
+        run: |
+          echo "Docker image pushed successfully."
+          echo "Image: ${{ env.IMAGE_NAME }}:latest"
+          echo "SHA: ${{ env.IMAGE_NAME }}:${{ github.sha }}"
