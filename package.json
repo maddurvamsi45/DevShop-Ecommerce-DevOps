@@ -1,0 +1,14 @@
+{
+  "name": "devshop-ecommerce",
+  "version": "1.0.0",
+  "description": "Professional e-commerce website for DevOps practice",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node tests/test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
