@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: devshop
-          image: madduruvamsi/devshop-ecommerce:v1.0
+          image: madduruvamsi/devshop-ecommerce:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
